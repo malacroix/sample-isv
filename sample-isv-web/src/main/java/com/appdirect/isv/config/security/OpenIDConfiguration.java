@@ -1,6 +1,7 @@
 package com.appdirect.isv.config.security;
 
 import javax.net.ssl.SSLContext;
+import javax.sql.DataSource;
 
 import org.apache.http.client.HttpClient;
 import org.apache.http.conn.ClientConnectionManager;
@@ -10,6 +11,7 @@ import org.apache.http.conn.scheme.SchemeRegistry;
 import org.apache.http.conn.ssl.X509HostnameVerifier;
 import org.openid4java.consumer.ConsumerException;
 import org.openid4java.consumer.ConsumerManager;
+import org.openid4java.consumer.JdbcConsumerAssociationStore;
 import org.openid4java.discovery.Discovery;
 import org.openid4java.discovery.html.HtmlResolver;
 import org.openid4java.discovery.yadis.YadisResolver;
@@ -39,7 +41,7 @@ public class OpenIDConfiguration {
 	}
 
 	@Bean
-	public OpenID4JavaConsumer openIdConsumer() throws ConsumerException {
+	public OpenID4JavaConsumer openIdConsumer(DataSource dataSource) throws ConsumerException {
 		OpenIDAttribute roleAttr = new OpenIDAttribute("roles", "https://www.appdirect.com/schema/user/roles");
 		roleAttr.setCount(99);
 		AxFetchListFactory attributesToFetchFactory = identifier -> Lists.newArrayList(
@@ -54,19 +56,26 @@ public class OpenIDConfiguration {
 				new OpenIDAttribute("companyName", "http://axschema.org/company/name"),
 				new OpenIDAttribute("title", "http://axschema.org/company/title")
 		);
-		return new OpenID4JavaConsumer(consumerManager(), attributesToFetchFactory);
+		return new OpenID4JavaConsumer(consumerManager(dataSource), attributesToFetchFactory);
 	}
 
-	private ConsumerManager consumerManager() {
+	private ConsumerManager consumerManager(DataSource dataSource) {
 		SSLContext sslContext = null;
 		X509HostnameVerifier hostnameVerifier = null;
-		return new ConsumerManager(
+		ConsumerManager consumerManager = new ConsumerManager(
 			new RealmVerifierFactory(new YadisResolver(httpFetcherFactory(sslContext, hostnameVerifier))),
 			new Discovery(
 				new HtmlResolver(httpFetcherFactory(sslContext, hostnameVerifier)),
 				new YadisResolver(httpFetcherFactory(sslContext, hostnameVerifier)),
 				Discovery.getXriResolver()),
 			httpFetcherFactory(sslContext, hostnameVerifier));
+
+		// Required to be able to handle OpenID across two separate server instances where there is no sticky connection
+		JdbcConsumerAssociationStore jdbcConsumerAssociationStore = new JdbcConsumerAssociationStore("openid_associations");
+		jdbcConsumerAssociationStore.setDataSource(dataSource);
+		consumerManager.setAssociations(jdbcConsumerAssociationStore);
+
+		return consumerManager;
 	}
 
 	private HttpFetcherFactory httpFetcherFactory(SSLContext sslContext, X509HostnameVerifier hostnameVerifier) {
