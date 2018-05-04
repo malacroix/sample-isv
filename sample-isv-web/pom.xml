@@ -240,7 +240,7 @@
 					<skipDocker>false</skipDocker>
 					<baseImage>openjdk:8u121-jdk</baseImage>
 					<imageName>docker.appdirectondemand.com/sample-isv/sample-isv</imageName>
-					<entryPoint>["java", "-server", "-Djava.security.egd=file:/dev/urandom", "-Xms160m", "-Xmx160m", "-XX:MaxMetaspaceSize=96m", "-Xss512k", "$JAVA_OPTS", -jar", "/${project.build.finalName}.jar"]</entryPoint>
+					<entryPoint>["java", "-server", "-Djava.security.egd=file:/dev/urandom", "-Xms160m", "-Xmx160m", "-XX:MaxMetaspaceSize=96m", "-Xss512k", "$JAVA_OPTS", "-jar", "/${project.build.finalName}.jar"]</entryPoint>
 					<imageTags>
 						<imageTag>${project.version}</imageTag>
 					</imageTags>
