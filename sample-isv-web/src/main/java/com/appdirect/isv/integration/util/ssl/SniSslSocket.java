@@ -56,7 +56,7 @@ public class SniSslSocket extends SSLSocket {
 			return;
 		}
 		SSLParameters sslParameters = getSSLParameters();
-		if (!sslParameters.getServerNames().isEmpty()) {
+		if (sslParameters.getServerNames() != null && !sslParameters.getServerNames().isEmpty()) {
 			return;
 		}
 		sslParameters.setServerNames(ImmutableList.of(new SNIHostName(host)));
