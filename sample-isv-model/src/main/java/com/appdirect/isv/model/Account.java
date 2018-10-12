@@ -4,7 +4,9 @@ import java.util.List;
 
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
+import javax.persistence.ConstraintMode;
 import javax.persistence.Entity;
+import javax.persistence.ForeignKey;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
@@ -49,13 +51,15 @@ public class Account extends TimestampedObject {
 	private String samlIdpMetadataUrl;
 
 	@ManyToOne
-	@JoinColumn(name = "application_profile_id")
+	@JoinColumn(name = "application_profile_id", foreignKey = @ForeignKey(value = ConstraintMode.NO_CONSTRAINT))
 	private ApplicationProfile applicationProfile;
 
 	@OneToMany(mappedBy = "account", orphanRemoval = true, cascade = { CascadeType.ALL })
+	@org.hibernate.annotations.ForeignKey(name = "none")
 	private List<User> users = Lists.newArrayList();
 
 	@OneToMany(mappedBy = "account", orphanRemoval = true, cascade = { CascadeType.ALL })
+	@org.hibernate.annotations.ForeignKey(name = "none")
 	private List<Addon> addons = Lists.newArrayList();
 
 	public Account(ApplicationProfile applicationProfile) {
